@@ -1,3 +1,0 @@
-dfsVirginia,54.164.211.108
-dfsIreland,52.23.242.80
-dfsJapan,54.91.209.99

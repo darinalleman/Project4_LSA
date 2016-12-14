@@ -33,14 +33,14 @@ public abstract class FileSystemPOA extends org.omg.PortableServer.Servant
 
 		switch (__method.intValue())
 		{
-		case 0: // FileSystemApp/FileSystem/sayHello
-		{
-			String $result = null;
-			$result = this.sayHello();
-			out = $rh.createReply();
-			out.write_string($result);
-			break;
-		}
+//		case 0: // FileSystemApp/FileSystem/sayHello
+//		{
+//			String $result = null;
+//			$result = this.sayHello();
+//			out = $rh.createReply();
+//			out.write_string($result);
+//			break;
+//		}
 
 		case 1: // FileSystemApp/FileSystem/shutdown
 		{
@@ -49,16 +49,16 @@ public abstract class FileSystemPOA extends org.omg.PortableServer.Servant
 			break;
 		}
 
-		case 2:
-		{
-			String fileTitle = in.read_string();
-			System.out.println("starting to read file!!!!!!!! " + fileTitle);
-			String $result = null;
-			$result = this.readFile(fileTitle);
-			out = $rh.createReply();
-			out.write_string($result);
-			break;
-		}
+//		case 2:
+//		{
+//			String fileTitle = in.read_string();
+//			System.out.println("starting to read file!!!!!!!! " + fileTitle);
+//			String $result = null;
+//			$result = this.readFile(fileTitle);
+//			out = $rh.createReply();
+//			out.write_string($result);
+//			break;
+//		}
 		default:
 			throw new org.omg.CORBA.BAD_OPERATION(0, org.omg.CORBA.CompletionStatus.COMPLETED_MAYBE);
 		}

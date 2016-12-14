@@ -3,9 +3,14 @@ module FileSystemApp
 typedef sequence<octet> byteSeq;
   interface FileSystem
   {
-      string sayHello();
       string readFile(in string title);
       oneway void shutdown();
-      string readLocal(in string title);
+      oneway void storeFile(in string title);
+      boolean otherServerHasFile(in long serverNum);
+      string getRecord(in long num);
+      boolean findFile(in string title);
+      oneway void setServers();
+      boolean hasFile(in string title);
+      string otherServerSendsFile(in string title);
   };
 };

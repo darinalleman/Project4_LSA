@@ -43,16 +43,7 @@ public class FileSystemClient
 
 			while(!action.equalsIgnoreCase("Quit"))
 			{
-				System.out.println("Please enter an action");
-				System.out.println("List of actions: \n" + "read\n");
-				action = input.nextLine();
 
-				if(action.equalsIgnoreCase("read"))
-				{
-					System.out.println("Please enter the file name:\n");
-					String fileName = input.nextLine();
-					System.out.println(fileSystemImpl.readLocal(fileName));
-				}
 			}
 			input.close();
 
