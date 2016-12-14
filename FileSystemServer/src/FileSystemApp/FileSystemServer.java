@@ -110,16 +110,9 @@ class FileSystemImpl extends FileSystemPOA
 		if(local)
 		{
 			System.out.println("File not local. Asking other servers...");
-			try
+			if (otherServerHasFile()) //check to see if other servers have the file
 			{
-				if (otherServerHasFile()) //check to see if other servers have the file
-				{
-					return true;
-				}
-			}
-			catch (InvalidName | NotFound | CannotProceed | org.omg.CosNaming.NamingContextPackage.InvalidName e)
-			{
-				e.printStackTrace();
+				return true;
 			}
 		}
 		return false;	//if we can't find the file at all
@@ -147,8 +140,26 @@ class FileSystemImpl extends FileSystemPOA
 	}
 
 	@Override
-	public String getRecord(int num) {
-		// TODO Auto-generated method stub
+	public String getRecord(int num)
+	{
+		try
+		{
+			BufferedReader br = new BufferedReader(new FileReader(file));
+
+			for(int i = 0; i < num; i++)
+			{
+				br.readLine();
+			}
+
+			String record = br.readLine();
+			System.out.println(record);
+			br.close();
+			return record;
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
 		return null;
 	}
 
@@ -156,19 +167,34 @@ class FileSystemImpl extends FileSystemPOA
 	 * Method to check if other servers have the file we're looking for
 	 */
 	@Override
-	public boolean otherServerHasFile() throws InvalidName, NotFound, CannotProceed, org.omg.CosNaming.NamingContextPackage.InvalidName
+	public boolean otherServerHasFile()
 	{
 		for (ArrayList<String> oneServer : allServers)
 		{
 			String[] args = {"orbd", "-ORBInitialPort", oneServer.get(0), "-port", oneServer.get(1), "-ORBInitialHost", oneServer.get(2)};
 			ORB orb = ORB.init(args, null);
 
-			org.omg.CORBA.Object objRef = orb.resolve_initial_references("NameService");
+			org.omg.CORBA.Object objRef = null;
+			try
+			{
+				objRef = orb.resolve_initial_references("NameService");
+			}
+			catch (InvalidName e)
+			{
+				e.printStackTrace();
+			}
 
 			NamingContextExt ncRef = NamingContextExtHelper.narrow(objRef);
 
 			String name = "FileSystem";
-			newFileSystem = FileSystemHelper.narrow(ncRef.resolve_str(name));
+			try
+			{
+				newFileSystem = FileSystemHelper.narrow(ncRef.resolve_str(name));
+			}
+			catch (NotFound | CannotProceed | org.omg.CosNaming.NamingContextPackage.InvalidName e)
+			{
+				e.printStackTrace();
+			}
 			if (newFileSystem.hasFile(file.getName()))
 			{
 				return true;
