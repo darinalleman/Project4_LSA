@@ -40,14 +40,30 @@ public class FileSystemClient
 
 			String action = "";
 			Scanner input = new Scanner(System.in);
-
-			while(!action.equalsIgnoreCase("Quit"))
+			boolean flag = true;
+			while(flag)
 			{
-
+				System.out.println("Enter a filename, or 'quit' to exit:\n");
+				action = input.next();
+				if(action.equalsIgnoreCase("Quit"))
+				{
+					break;
+				}
+				if(fileSystemImpl.findFile(action))
+				{
+					System.out.println("Please enter the record number you wish to modify: \n");
+					String recordNum = input.next();
+					System.out.println(fileSystemImpl.getRecord(Integer.parseInt(recordNum)));
+				}
+				else
+				{
+					System.out.println("File not found. Please try again.");
+				}
 			}
+			flag = false;
 			input.close();
-
-		} catch (Exception e)
+		}
+		catch (Exception e)
 		{
 			System.out.println("ERROR : " + e);
 			e.printStackTrace(System.out);
