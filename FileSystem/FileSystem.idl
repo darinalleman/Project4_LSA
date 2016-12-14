@@ -3,15 +3,16 @@ module FileSystemApp
 typedef sequence<octet> byteSeq;
   interface FileSystem
   {
-      string readFile(in string title);
-      void shutdown ();
-      String getRecord (int num);
-      boolean findFile (String title);
-      void setServers ();
-      boolean hasFile (String title);
-      String otherServerSendsFile (String title) throws IOException;
-      boolean otherServerHasFile() throws InvalidName, NotFound, CannotProceed, org.omg.CosNaming.NamingContextPackage.InvalidName;
-      void writeFile(String title) throws IOException;
-      void closeFile(String title);
+      oneway void shutdown ();
+      string getRecord (in long num);
+      boolean findFile (in string title);
+      oneway void setServers ();
+      boolean hasFile (in string title);
+      string otherServerSendsFile (in string title);
+      boolean otherServerHasFile();
+      oneway void writeFile(in string title);
+      oneway void closeFile(in string title);
+      oneway void deleteFile (in string title);
+      oneway void saveFile(in string data, in long record, in string title); 
   };
 };

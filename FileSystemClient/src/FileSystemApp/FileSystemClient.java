@@ -43,7 +43,7 @@ public class FileSystemClient
 			boolean flag = true;
 			while(flag)
 			{
-				System.out.println("Enter a filename, or 'quit' to exit:\n");
+				System.out.println("Enter a filename without the extension, or 'quit' to exit:\n");
 				action = input.next();
 				if(action.equalsIgnoreCase("Quit"))
 				{
@@ -54,6 +54,10 @@ public class FileSystemClient
 					System.out.println("Please enter the record number you wish to modify: \n");
 					String recordNum = input.next();
 					System.out.println(fileSystemImpl.getRecord(Integer.parseInt(recordNum)));
+					System.out.println("Please enter your changes to the record\n");
+					String modifiedRecord = input.next();
+					fileSystemImpl.saveRecordToFile(modifiedRecord, Integer.parseInt(recordNum), action);
+					System.out.println("Changes successfully made.");
 				}
 				else
 				{

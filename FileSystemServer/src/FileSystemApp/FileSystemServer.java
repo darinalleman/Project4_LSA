@@ -3,6 +3,7 @@ package FileSystemApp;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -26,6 +27,7 @@ class FileSystemImpl extends FileSystemPOA
 {
 	private ORB orb;
 	private ArrayList<ArrayList<String>> allServers = new ArrayList<ArrayList<String>>();
+	private ArrayList<File> files = new ArrayList<File>();
 	FileSystem newFileSystem;
 	File file;
 
@@ -103,6 +105,15 @@ class FileSystemImpl extends FileSystemPOA
 	public boolean findFile(String title)
 	{
 		boolean local = false;
+
+		//check to see if we have already added the file to our ArrayList
+		for(File file : files)
+		{
+			if(file.getName().equals(title + ".txt"))
+			{
+				return true;
+			}
+		}
 		if(local = hasFile(title))	//check to see if the file is local
 		{
 			return !local;
@@ -133,12 +144,16 @@ class FileSystemImpl extends FileSystemPOA
 			file = new File(title + ".txt");
 			if(file.isFile())
 			{
+				files.add(file);
 				return true;
 			}
 		}
 		return false;
 	}
 
+	/**
+	 * Gets the record that the client wants to modify
+	 */
 	@Override
 	public String getRecord(int num)
 	{
@@ -197,6 +212,7 @@ class FileSystemImpl extends FileSystemPOA
 			}
 			if (newFileSystem.hasFile(file.getName()))
 			{
+				files.add(file);
 				return true;
 			}
 		}
@@ -207,22 +223,28 @@ class FileSystemImpl extends FileSystemPOA
 	 * Server with the file sends it back to the client
 	 */
 	@Override
-	public String otherServerSendsFile(String title) throws IOException
+	public String otherServerSendsFile(String title)
 	{
 		String fileText = null;
-		BufferedReader br = new BufferedReader(new FileReader(title));
+		BufferedReader br = null;
+		try {
+			br = new BufferedReader(new FileReader(title));
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		try
 		{
 			while(br.readLine() != null)
 			{
 				fileText += br.readLine();
 			}
+			br.close();
 		}
-		catch (IOException e)
+		catch (IOException e1)
 		{
-			e.printStackTrace();
+			e1.printStackTrace();
 		}
-		br.close();
 		return fileText;
 	}
 
@@ -230,13 +252,124 @@ class FileSystemImpl extends FileSystemPOA
 	 * Writes the file out to the local copy
 	 */
 	@Override
-	public void writeFile(String title) throws IOException
+	public void writeFile(String title)
 	{
 		String text = newFileSystem.otherServerSendsFile(title);
-		BufferedWriter bw = new BufferedWriter(new FileWriter(title));
+		try
+		{
+			BufferedWriter bw = new BufferedWriter(new FileWriter(title));
 
-		bw.write(text);
-		bw.close();
+			bw.write(text);
+			bw.close();
+			closeFile(title);
+		}
+		catch(IOException e)
+		{
+			e.printStackTrace();
+		}
+
+	}
+
+	/**
+	 * Remove/close the file when we are finished with it.
+	 */
+	@Override
+	public void closeFile(String title)
+	{
+		File temp = new File(title + ".txt");
+		files.remove(temp);
+
+		for (ArrayList<String> oneServer : allServers)
+		{
+			String[] args = {"orbd", "-ORBInitialPort", oneServer.get(0), "-port", oneServer.get(1), "-ORBInitialHost", oneServer.get(2)};
+			ORB orb = ORB.init(args, null);
+
+			org.omg.CORBA.Object objRef = null;
+			try
+			{
+				objRef = orb.resolve_initial_references("NameService");
+			}
+			catch (InvalidName e)
+			{
+				e.printStackTrace();
+			}
+
+			NamingContextExt ncRef = NamingContextExtHelper.narrow(objRef);
+
+			String name = "FileSystem";
+			try
+			{
+				newFileSystem = FileSystemHelper.narrow(ncRef.resolve_str(name));
+			}
+			catch (NotFound | CannotProceed | org.omg.CosNaming.NamingContextPackage.InvalidName e)
+			{
+				e.printStackTrace();
+			}
+			if (newFileSystem.hasFile(file.getName()))
+			{
+				newFileSystem.deleteFile(file.getName());
+			}
+		}
+	}
+
+	/**
+	 * Delete the file when we're finished
+	 */
+	@Override
+	public void deleteFile(String title)
+	{
+		File file = new File(title + ".txt");
+		file.delete();
+	}
+
+	@Override
+	public void saveRecordToFile(String record, int recordNum, String title)
+	{
+		for (File f : files)
+		{
+			if (f.getName().equals(title + ".txt"))
+			{
+				try
+				{
+					File temp = new File(title + ".tmp");
+					BufferedReader br = new BufferedReader(new FileReader(f));
+					BufferedWriter bw = new BufferedWriter(new FileWriter(temp));
+
+					//until we get to the record that we need to change
+					for (int i = 0; i < recordNum; i++)
+					{
+						if (br.readLine() != null)
+						{
+							//simply write those lines to the temp file
+							bw.write(br.readLine());
+						}
+					}
+
+					//after that for loop we will be at the record we need to change
+					bw.write(record);
+
+					//read the line of the record we changed in the old file to skip over it
+					br.readLine();
+
+					//continue reading lines from the old file and copying them to the new file
+					while (br.readLine() != null)
+					{
+						bw.write(br.readLine());
+					}
+
+					files.remove(f);								// remove the file when we're done
+					f.delete();										// delete the file
+					temp.renameTo(new File(title + ".txt"));		// rename temp to original name
+					br.close();
+					bw.close();
+				}
+				catch (IOException e)
+				{
+					e.printStackTrace();
+				}
+			}
+		}
+
 	}
 }
 
